@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hours Alignment – Bill4Time vs UKG</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #e8edf2;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+    padding: 24px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    background: #1e3a6e;
+    border-radius: 4px 4px 0 0;
+    padding: 13px 20px;
+    width: 100%; max-width: 900px;
+  }
+  .page-header h1 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .page-header p  { font-size: 12px; color: rgba(255,255,255,0.75); }
+
+  .page-sub {
+    background: #c8d8e8; border: 1px solid #a8b8cc;
+    border-top: none; border-radius: 0 0 4px 4px;
+    padding: 9px 20px; width: 100%; max-width: 900px;
+    font-size: 12px; color: #333; line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  /* ── Targets bar ── */
+  .targets-bar {
+    width: 100%; max-width: 900px;
+    background: #fff; border: 1px solid #bbb; border-radius: 4px;
+    padding: 12px 18px; margin-bottom: 18px;
+    display: flex; gap: 0; align-items: stretch;
+  }
+  .target-item {
+    flex: 1; padding: 0 16px;
+    border-right: 1px solid #e0e0e0;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .target-item:first-child { padding-left: 0; }
+  .target-item:last-child  { border-right: none; }
+  .target-label { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; }
+  .target-val   { font-size: 14px; font-weight: 700; color: #1e3a6e; }
+  .target-min   { font-size: 10px; color: #888; }
+
+  /* ── Scenario banner ── */
+  .scenario-banner {
+    width: 100%; max-width: 900px;
+    background: #eef3fb; border: 1px solid #b0c4e8;
+    border-radius: 4px; padding: 10px 16px;
+    font-size: 12px; color: #1a2a5a; line-height: 1.5;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scenario-banner strong { color: #1e3a6e; }
+
+  /* ── Section labels ── */
+  .sys-label {
+    width: 100%; max-width: 900px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .sys-label .sys-name {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: #fff; padding: 4px 14px; border-radius: 3px;
+  }
+  .sys-label .sys-name.b4t { background: #1e3a6e; }
+  .sys-label .sys-name.ukg { background: #2a5a8e; }
+  .sys-label .ann-line { flex: 1; height: 1px; background: #bbb; }
+
+  /* ── Panel ── */
+  .panel {
+    width: 100%; max-width: 900px;
+    background: #fff; border: 1px solid #bbb;
+    border-radius: 4px; overflow: hidden;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  /* B4T panel header */
+  .b4t-header {
+    background: #1e3a6e; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 8px 16px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* B4T entries table */
+  .b4t-title { font-size: 14px; font-weight: 700; color: #222; padding: 10px 16px 6px; }
+  .b4t-table { width: 100%; border-collapse: collapse; }
+  .b4t-table thead tr { border-bottom: 1px solid #e0e0e0; }
+  .b4t-table th {
+    font-size: 11px; font-weight: 600; color: #1e3a6e;
+    padding: 6px 16px; text-align: left;
+  }
+  .b4t-table th:last-child { text-align: right; }
+  .b4t-table td {
+    font-size: 12px; color: #333;
+    padding: 8px 16px; border-bottom: 1px solid #f0f0f0;
+  }
+  .b4t-table td:last-child { text-align: right; font-weight: 600; color: #1e3a6e; }
+  .b4t-table .total-row td {
+    background: #f7f7f7; font-weight: 700;
+    border-top: 1px solid #ddd; border-bottom: none;
+    color: #333;
+  }
+  .b4t-table .total-row td:last-child {
+    color: #1e3a6e; font-size: 14px;
+  }
+
+  /* B4T annotation bubble */
+  .b4t-ann {
+    background: #1e3a6e; border: 1px solid #1e3a6e;
+    border-radius: 0 0 4px 4px; padding: 11px 16px;
+    margin: 0;
+    font-size: 13px; font-weight: 500; color: #fff; line-height: 1.6;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .ann-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+
+  /* ── Connector ── */
+  .connector {
+    width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 6px 0; gap: 0; margin-bottom: 6px;
+  }
+  .connector-line { width: 2px; height: 16px; background: #1e3a6e; }
+  .connector-badge {
+    background: #1e3a6e; color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 5px 16px; border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  /* UKG panel header */
+  .ukg-header {
+    background: #2a5a8e; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 8px 16px; letter-spacing: 0.06em; text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ukg-header .pencil { font-size: 14px; opacity: 0.8; }
+
+  /* UKG table */
+  .ukg-table { width: 100%; border-collapse: collapse; }
+  .ukg-table thead tr { background: #f2f5fb; }
+  .ukg-table th {
+    font-size: 11px; font-weight: 600; color: #2a5a8e;
+    padding: 7px 12px; text-align: left;
+    border-bottom: 1px solid #dde4ef;
+  }
+  .ukg-table th:not(:first-child) { text-align: center; }
+
+  .ukg-table td {
+    font-size: 12px; color: #333;
+    padding: 7px 12px; border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+  }
+  .ukg-table td:first-child { text-align: left; font-weight: 500; }
+  .ukg-table .weekend td { background: #f9f9f9; color: #aaa; }
+  .ukg-table .future td  { color: #aaa; }
+
+  /* Today row — highlighted */
+  .ukg-table .today-row td {
+    background: #eef3fb;
+    font-weight: 600;
+  }
+  .ukg-table .today-row td:first-child {
+    color: #1e3a6e; font-weight: 700;
+  }
+
+  /* Annotated cell */
+  .ann-cell {
+    position: relative;
+    background: #1e3a6e !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    border-radius: 3px;
+    font-size: 13px !important;
+  }
+
+  /* Column highlight header */
+  .col-highlight { background: #d0dff5 !important; color: #1e3a6e !important; }
+
+  /* UKG annotation */
+  .ukg-ann {
+    background: #2a5a8e; border-top: none;
+    border-radius: 0 0 4px 4px; padding: 11px 16px;
+    margin: 0;
+    font-size: 13px; font-weight: 500; color: #fff; line-height: 1.6;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+
+  /* ── Gap explainer ── */
+  .gap-explainer {
+    width: 100%; max-width: 900px;
+    border-radius: 4px; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .gap-header {
+    background: #1e3a6e; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 8px 16px;
+  }
+  .gap-body {
+    background: #fff; border: 1px solid #bbb; border-top: none;
+    padding: 14px 16px;
+    display: flex; gap: 0; align-items: stretch;
+  }
+  .gap-col {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 8px 12px; text-align: center;
+  }
+  .gap-col .num {
+    font-size: 28px; font-weight: 700; line-height: 1;
+  }
+  .gap-col .num.b4t-col { color: #1e3a6e; }
+  .gap-col .num.ukg-col { color: #2a5a8e; }
+  .gap-col .num.gap-col-num { color: #888; }
+  .gap-col .lbl { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+  .gap-col .sub { font-size: 11px; color: #666; margin-top: 2px; }
+  .gap-divider { width: 1px; background: #e0e0e0; align-self: stretch; flex-shrink: 0; }
+  .gap-ok { background: #e8f5e8; border: 1px solid #70b870; border-radius: 3px; padding: 4px 12px; font-size: 11px; font-weight: 700; color: #1a5a1a; margin-top: 8px; }
+
+  /* ── Warning box ── */
+  .warning-box {
+    width: 100%; max-width: 900px;
+    background: #fff8f0; border: 2px solid #e09030;
+    border-radius: 4px; padding: 12px 16px;
+    font-size: 12px; color: #5a3000; line-height: 1.6;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .warning-box .warn-icon { font-size: 18px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="page-header">
+  <h1>Hours Alignment — Bill4Time vs UKG</h1>
+  <p>Understanding how your two systems should match up at the end of each day</p>
+</div>
+<div class="page-sub">
+  Both Bill4Time and UKG record your time — but they track different things. This page shows you what to look for, what the numbers mean, and what a healthy alignment looks like.
+</div>
+
+<!-- Targets bar -->
+<div class="targets-bar">
+  <div class="target-item">
+    <div class="target-label">Daily Target</div>
+    <div class="target-val">~8 hours</div>
+    <div class="target-min">Minimum: 7.5 hrs</div>
+  </div>
+  <div class="target-item">
+    <div class="target-label">Weekly Target</div>
+    <div class="target-val">~40 hours</div>
+    <div class="target-min">Minimum: 38 hrs</div>
+  </div>
+  <div class="target-item">
+    <div class="target-label">Small gaps</div>
+    <div class="target-val" style="color:#1a5a1a;">Expected ✓</div>
+    <div class="target-min">Billing increments cause slight rounding</div>
+  </div>
+  <div class="target-item">
+    <div class="target-label">Large gaps</div>
+    <div class="target-val" style="color:#c03030;">Require review</div>
+    <div class="target-min">Check for missing entries</div>
+  </div>
+</div>
+
+<!-- Scenario -->
+<div class="scenario-banner">
+  <span style="font-size:18px;">📅</span>
+  <span><strong>Scenario — Tuesday, September 22:</strong> You worked a full day (9:00 AM – 5:00 PM) and logged billable time throughout the day in Bill4Time. Here is how the two systems look at end of day — and how to read them together.</span>
+</div>
+
+<!-- BILL4TIME -->
+<div class="sys-label">
+  <span class="sys-name b4t">① Bill4Time</span>
+  <div class="ann-line"></div>
+  <span style="font-size:11px;color:#888;font-style:italic;">What did I bill today?</span>
+</div>
+
+<div class="panel">
+  <div class="b4t-header">Bill4Time — Time &amp; Expenses</div>
+
+  <!-- Day tabs -->
+  <div style="display:flex;align-items:center;gap:0;background:#f0f0f0;border-bottom:1px solid #ddd;padding:0 12px;overflow-x:auto;">
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">All Week <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">5</span></div>
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">Sun (9/21) <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">0</span></div>
+    <div style="font-size:11px;font-weight:700;padding:8px 12px;background:#1e6fdc;color:#fff;border-radius:3px 3px 0 0;white-space:nowrap;">Tue (9/22) <span style="background:rgba(255,255,255,0.3);color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">5</span></div>
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">Wed (9/23) <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">0</span></div>
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">Thu (9/24) <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">0</span></div>
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">Fri (9/25) <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">0</span></div>
+    <div style="font-size:11px;font-weight:600;padding:8px 12px;color:#555;white-space:nowrap;">Sat (9/26) <span style="background:#aaa;color:#fff;border-radius:8px;font-size:10px;padding:1px 6px;margin-left:3px;">0</span></div>
+    <div style="margin-left:auto;color:#aaa;font-size:14px;padding:0 8px;">⚙</div>
+  </div>
+
+  <!-- Entries table -->
+  <table class="b4t-table" style="font-size:11.5px;">
+    <thead>
+      <tr style="background:#f5f5f5;">
+        <th style="width:100px;">Date ↕</th>
+        <th>Client ↕</th>
+        <th>Matter ↕</th>
+        <th>Private Description ↕</th>
+        <th style="text-align:center;">Cost ↕</th>
+        <th style="text-align:center;">Labor (hrs) ↕</th>
+        <th style="text-align:center;">Billable (hrs) ↕</th>
+        <th style="text-align:center;">Total (hrs) ↕</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="white-space:nowrap;color:#333;">
+          <span style="color:#5a9a3a;font-size:13px;margin-right:4px;">⏱</span>09/22/2026
+        </td>
+        <td>SLS Operations</td>
+        <td>Electrostim SLS Ops</td>
+        <td style="color:#555;">Medical Records Request/Follow Up</td>
+        <td style="text-align:center;color:#aaa;">-</td>
+        <td style="text-align:center;font-weight:600;color:#333;">2.50</td>
+        <td style="text-align:center;font-weight:600;color:#333;">2.50</td>
+        <td style="text-align:center;font-weight:600;color:#333;">2.50</td>
+      </tr>
+      <tr>
+        <td style="white-space:nowrap;color:#333;">
+          <span style="color:#5a9a3a;font-size:13px;margin-right:4px;">⏱</span>09/22/2026
+        </td>
+        <td>Hernandez, Maria</td>
+        <td>Electrostim SLS Ops</td>
+        <td style="color:#555;">Client Intake Interview &amp; Notes</td>
+        <td style="text-align:center;color:#aaa;">-</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.00</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.00</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.00</td>
+      </tr>
+      <tr>
+        <td style="white-space:nowrap;color:#333;">
+          <span style="color:#5a9a3a;font-size:13px;margin-right:4px;">⏱</span>09/22/2026
+        </td>
+        <td>Patel, Rajesh</td>
+        <td>Electrostim SLS Ops</td>
+        <td style="color:#555;">Draft Demand Letter – Review &amp; Revisions</td>
+        <td style="text-align:center;color:#aaa;">-</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.75</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.75</td>
+        <td style="text-align:center;font-weight:600;color:#333;">1.75</td>
+      </tr>
+      <tr>
+        <td style="white-space:nowrap;color:#333;">
+          <span style="color:#5a9a3a;font-size:13px;margin-right:4px;">⏱</span>09/22/2026
+        </td>
+        <td>SLS Operations</td>
+        <td>Electrostim SLS Ops</td>
+        <td style="color:#555;">Court Filing Preparation</td>
+        <td style="text-align:center;color:#aaa;">-</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.75</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.75</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.75</td>
+      </tr>
+      <tr>
+        <td style="white-space:nowrap;color:#333;">
+          <span style="color:#5a9a3a;font-size:13px;margin-right:4px;">⏱</span>09/22/2026
+        </td>
+        <td>Thompson, James</td>
+        <td>Electrostim SLS Ops</td>
+        <td style="color:#555;">Attorney Correspondence / Email Follow-Up</td>
+        <td style="text-align:center;color:#aaa;">-</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.50</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.50</td>
+        <td style="text-align:center;font-weight:600;color:#333;">0.50</td>
+      </tr>
+      <!-- Day Total -->
+      <tr style="background:#f0f0f0;">
+        <td colspan="4" style="font-weight:700;font-size:12px;color:#333;padding:7px 16px;">Day Total:</td>
+        <td style="text-align:center;color:#aaa;font-weight:600;">-</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+      </tr>
+      <!-- Week Total -->
+      <tr style="background:#e8e8e8;">
+        <td colspan="4" style="font-weight:700;font-size:12px;color:#333;padding:7px 16px;">Week Total:</td>
+        <td style="text-align:center;color:#aaa;font-weight:600;">-</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+        <td style="text-align:center;font-weight:700;font-size:13px;color:#333;">6.50</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="b4t-ann">
+    <span class="ann-icon">①</span>
+    <span><strong>Look at the Day Total — 6.50 hrs.</strong> This is what Bill4Time recorded for today. It only captures time you actively billed to a client matter. Lunch, short admin tasks, and rounding are not included here.</span>
+  </div>
+</div>
+
+<!-- Connector -->
+<div class="connector">
+  <div class="connector-line"></div>
+  <div class="connector-badge">Now compare this to UKG ↓</div>
+  <div class="connector-line"></div>
+</div>
+
+<!-- UKG -->
+<div class="sys-label">
+  <span class="sys-name ukg">② UKG</span>
+  <div class="ann-line"></div>
+  <span style="font-size:11px;color:#888;font-style:italic;">How long was I clocked in today?</span>
+</div>
+
+<div class="panel">
+  <div class="ukg-header">
+    UKG <span class="pencil">✎</span>
+  </div>
+  <table class="ukg-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Schedule</th>
+        <th>In</th>
+        <th>Out</th>
+        <th>Pay code</th>
+        <th>Amount</th>
+        <th class="col-highlight">Daily ← look here</th>
+        <th>Period</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="weekend"><td>Sun 9/13</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>Mon 9/14</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">9:02 AM</td><td style="color:#2a5a8e;">5:01 PM</td><td></td><td></td><td>7:59</td><td>7:59</td></tr>
+      <tr><td>Tue 9/15</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">8:58 AM</td><td style="color:#2a5a8e;">5:00 PM</td><td></td><td></td><td>8:02</td><td>16:01</td></tr>
+      <tr><td>Wed 9/16</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">9:00 AM</td><td style="color:#2a5a8e;">5:03 PM</td><td></td><td></td><td>8:03</td><td>24:04</td></tr>
+      <tr><td>Thu 9/17</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">9:01 AM</td><td style="color:#2a5a8e;">5:00 PM</td><td></td><td></td><td>7:59</td><td>32:03</td></tr>
+      <tr><td>Fri 9/18</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">8:55 AM</td><td style="color:#2a5a8e;">4:58 PM</td><td></td><td></td><td>8:03</td><td>40:06</td></tr>
+      <tr class="weekend"><td>Sat 9/19</td><td></td><td></td><td></td><td></td><td></td><td></td><td>40:06</td></tr>
+      <tr class="weekend"><td>Sun 9/20</td><td></td><td></td><td></td><td></td><td></td><td></td><td>40:06</td></tr>
+      <tr><td>Mon 9/21</td><td style="color:#2a5a8e;">9:00 AM – 5:00 PM</td><td style="color:#2a5a8e;">9:00 AM</td><td style="color:#2a5a8e;">5:00 PM</td><td></td><td></td><td>8:00</td><td>48:06</td></tr>
+
+      <!-- TODAY ROW — annotated -->
+      <tr class="today-row">
+        <td>Tue 9/22 ★ <span style="font-size:9px;background:#1e3a6e;color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px;">TODAY</span></td>
+        <td style="color:#2a5a8e;font-weight:600;">9:00 AM – 5:00 PM</td>
+        <td style="color:#2a5a8e;font-weight:600;">9:00 AM</td>
+        <td style="color:#2a5a8e;font-weight:600;">5:00 PM</td>
+        <td></td>
+        <td></td>
+        <td class="ann-cell">8:00 ②</td>
+        <td style="font-weight:700;">56:00</td>
+      </tr>
+
+      <tr class="future"><td>Wed 9/23</td><td style="color:#ccc;">9:00 AM – 5:00 PM</td><td></td><td></td><td></td><td></td><td>8:00</td><td>64:00</td></tr>
+      <tr class="future"><td>Thu 9/24</td><td style="color:#ccc;">9:00 AM – 5:00 PM</td><td></td><td></td><td></td><td></td><td>8:00</td><td>72:00</td></tr>
+      <tr class="future"><td>Fri 9/25</td><td style="color:#ccc;">9:00 AM – 3:00 PM</td><td></td><td></td><td></td><td></td><td>8:00</td><td>80:00</td></tr>
+      <tr class="weekend"><td>Sat 9/26</td><td></td><td></td><td></td><td></td><td></td><td></td><td>80:00</td></tr>
+    </tbody>
+  </table>
+
+  <div class="ukg-ann">
+    <span class="ann-icon">②</span>
+    <span><strong>Find today's row (Tue 9/22) and look at the Daily column — 8:00 hrs.</strong> This is how long you were clocked in today. UKG records your full shift from clock-in to clock-out. This is the number to compare against your Bill4Time total.</span>
+  </div>
+</div>
+
+<!-- Gap explainer -->
+<div class="gap-explainer" style="margin-top:14px;">
+  <div class="gap-header">② How the numbers compare — Tue 9/22</div>
+  <div class="gap-body">
+    <div class="gap-col">
+      <div class="num b4t-col">6.50</div>
+      <div class="lbl">Bill4Time</div>
+      <div class="sub">Billable hours logged</div>
+    </div>
+    <div class="gap-divider"></div>
+    <div class="gap-col">
+      <div class="num ukg-col">8:00</div>
+      <div class="lbl">UKG</div>
+      <div class="sub">Hours clocked in</div>
+    </div>
+    <div class="gap-divider"></div>
+    <div class="gap-col">
+      <div class="num gap-col-num">1.5 hr</div>
+      <div class="lbl">Gap</div>
+      <div class="sub">Lunch + short admin tasks</div>
+      <div class="gap-ok">✓ Acceptable — within range</div>
+    </div>
+    <div class="gap-divider"></div>
+    <div class="gap-col" style="text-align:left;align-items:flex-start;">
+      <div style="font-size:11px;color:#333;line-height:1.7;">
+        <strong>Why is there a gap?</strong><br>
+        Bill4Time only captures <em>billable</em> work. Your UKG total includes everything — lunch, brief admin tasks, and billing increment rounding. A gap of 1–2 hours is completely normal and expected.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Warning box -->
+<div class="warning-box" style="margin-top:14px;">
+  <span class="warn-icon">⚠️</span>
+  <span><strong>Large gaps between Bill4Time and UKG require review.</strong> If your billable hours are significantly lower than your UKG clock hours and lunch/admin don't account for the difference, check for missing entries, open timers, or unlogged tasks before the end of the day.</span>
+</div>
+
+</body>
+</html>
